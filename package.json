@@ -1,0 +1,18 @@
+{
+  "name": "mastodon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "html-to-text": "^9.0.5",
+    "openai": "^4.24.1",
+    "tsl-mastodon-api": "^0.4.1"
+  }
+}
