@@ -3,8 +3,7 @@ import { convert } from 'html-to-text';
 import OpenAI from "openai";
 
 const READ_ONLY = true
-//TODO remove API Key
-const openai = new OpenAI({apiKey: "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"});
+const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
 async function passesModeration(lookingFor) {
     let input = lookingFor
@@ -107,13 +106,11 @@ async function dismissAllNotifications(mastodon) {
     }
 }
 
-async function postHelloWorld() {
-    // create the API instance
+async function replyToUsers() {
     const mastodon = new Mastodon.API({
         access_token: 'KiS_CLoCpCdXQQVDHoQCxu32OQkpc4XA0XV-zr5ITso',
         api_url: 'https://botsin.space/api/v1/'
     });
-    // expect client / server errors
     try {
         const result = await mastodon.getNotifications();
         const notifications = result.json
@@ -142,4 +139,4 @@ async function postHelloWorld() {
         console.error("Failed to retrieve notifications or dismiss notifications", error);
     }
 }
-await postHelloWorld();
+await replyToUsers();
