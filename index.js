@@ -2,7 +2,7 @@ import * as Mastodon from 'tsl-mastodon-api';
 import { convert } from 'html-to-text';
 import OpenAI from "openai";
 
-const READ_ONLY = true
+const READ_ONLY = false
 const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
 async function passesModeration(lookingFor) {
