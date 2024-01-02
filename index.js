@@ -81,7 +81,7 @@ async function getReply(userName, lookingFor) {
     const recommendation = JSON.parse(bookRecommendationCall.arguments)
     const result = recommendation.result
 
-    return `@${userName} Check Out "${result.title}" by ${result.author}\n${result.reason}`
+    return `@${userName} Check Out "${result.title}" by ${result.author}\n\n${result.reason}\nFind more #books @ https://findmyread.com`
 }
 
 async function toot(mastodon, message, originStatusId) {
@@ -90,7 +90,8 @@ async function toot(mastodon, message, originStatusId) {
     }
     const postResult = await mastodon.postStatus({
         in_reply_to_id: originStatusId,
-        status: message
+        status: message,
+        // visibility: "private" 
     });
     if(postResult.failed) {
         console.error("Failed to reply:", postResult)
