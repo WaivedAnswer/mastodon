@@ -2,7 +2,10 @@ import * as Mastodon from 'tsl-mastodon-api';
 import { convert } from 'html-to-text';
 import OpenAI from "openai";
 
-const READ_ONLY = false
+function isReadonly() {
+    return process.env.READ_ONLY !== undefined ? process.env.READ_ONLY === "true" : true
+}
+
 const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
 async function passesModeration(lookingFor) {
@@ -78,11 +81,11 @@ async function getReply(userName, lookingFor) {
     const recommendation = JSON.parse(bookRecommendationCall.arguments)
     const result = recommendation.result
 
-    return `@${userName} Check out ${result.title} by ${result.author}\nWhy You'll Love This: ${result.reason}`
+    return `@${userName} Check Out "${result.title}" by ${result.author}\n${result.reason}`
 }
 
 async function toot(mastodon, message, originStatusId) {
-    if(READ_ONLY) {
+    if(isReadonly()) {
         return
     }
     const postResult = await mastodon.postStatus({
@@ -96,7 +99,7 @@ async function toot(mastodon, message, originStatusId) {
 }
 
 async function dismissAllNotifications(mastodon) {
-    if(READ_ONLY) {
+    if(isReadonly()) {
         return
     }
     const dismissResult = await mastodon.postDismissAllNotifications()
@@ -108,7 +111,7 @@ async function dismissAllNotifications(mastodon) {
 
 async function replyToUsers() {
     const mastodon = new Mastodon.API({
-        access_token: 'KiS_CLoCpCdXQQVDHoQCxu32OQkpc4XA0XV-zr5ITso',
+        access_token: process.env.MASTODON_ACCESS_TOKEN,
         api_url: 'https://botsin.space/api/v1/'
     });
     try {
@@ -133,10 +136,16 @@ async function replyToUsers() {
             }
             
         }
-        await dismissAllNotifications(mastodon)
+        if(notifications.length !== 0) {
+            await dismissAllNotifications(mastodon)
+        }
     }
     catch (error) {
         console.error("Failed to retrieve notifications or dismiss notifications", error);
     }
 }
-await replyToUsers();
+
+export const handler = async (event, context, callback) => {
+    await replyToUsers();
+    callback(null, 'Finished')
+};

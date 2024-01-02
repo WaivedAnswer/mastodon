@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lambda-package": "npm install --omit=dev && rm -f function.zip && zip -r function.zip . -x './.git/*'",
+    "lambda-upload": "aws lambda update-function-code --function-name fmr-mastodon --zip-file fileb://function.zip --profile my-dev-profile > /tmp/linkoutput.txt",
+    "lambda": " npm run lambda-package && npm run lambda-upload"
   },
   "type": "module",
   "keywords": [],
