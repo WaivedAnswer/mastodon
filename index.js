@@ -91,7 +91,7 @@ async function toot(mastodon, message, originStatusId) {
     const postResult = await mastodon.postStatus({
         in_reply_to_id: originStatusId,
         status: message,
-        // visibility: "private" 
+        //visibility: "direct" 
     });
     if(postResult.failed) {
         console.error("Failed to reply:", postResult)
@@ -142,7 +142,7 @@ async function replyToUsers() {
         }
     }
     catch (error) {
-        console.error("Failed to retrieve notifications or dismiss notifications", error);
+        console.error("Failed global:", error);
     }
 }
 
