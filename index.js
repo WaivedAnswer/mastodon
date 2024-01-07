@@ -1,6 +1,11 @@
-import * as Mastodon from 'tsl-mastodon-api';
+import { createRestAPIClient } from "masto";
 import { convert } from 'html-to-text';
 import OpenAI from "openai";
+
+const masto = createRestAPIClient({
+    url: 'https://botsin.space/api/v1/',
+    accessToken: process.env.MASTODON_ACCESS_TOKEN,
+  });
 
 function isReadonly() {
     return process.env.READ_ONLY !== undefined ? process.env.READ_ONLY === "true" : true
@@ -84,26 +89,22 @@ async function getReply(userName, lookingFor) {
     return `@${userName} Check Out "${result.title}" by ${result.author}\n\n${result.reason}\nFind more #books @ https://findmyread.com`
 }
 
-async function toot(mastodon, message, originStatusId) {
+async function toot(message, originStatusId) {
     if(isReadonly()) {
         return
     }
-    const postResult = await mastodon.postStatus({
-        in_reply_to_id: originStatusId,
+    await masto.v1.statuses.create({
+        inReplyToId: originStatusId,
         status: message,
-        //visibility: "direct" 
+        visibility: "public",
     });
-    if(postResult.failed) {
-        console.error("Failed to reply:", postResult)
-        throw new Error("Failed to post reply")
-    }
 }
 
-async function dismissAllNotifications(mastodon) {
+async function dismissAllNotifications() {
     if(isReadonly()) {
         return
     }
-    const dismissResult = await mastodon.postDismissAllNotifications()
+    const dismissResult = await masto.v1.notifications.clear()
     if(dismissResult.failed) {
         console.error("Failed to dismiss:", dismissResult)
         throw new Error("Failed to dismiss")
@@ -111,15 +112,10 @@ async function dismissAllNotifications(mastodon) {
 }
 
 async function replyToUsers() {
-    const mastodon = new Mastodon.API({
-        access_token: process.env.MASTODON_ACCESS_TOKEN,
-        api_url: 'https://botsin.space/api/v1/'
-    });
     try {
-        const result = await mastodon.getNotifications();
-        const notifications = result.json
+        const notifications = await masto.v1.notifications.list({types: ["mention"]});
         console.log(`Processing ${notifications.length} notifications`)
-        for(let notification of notifications) {
+        for(const notification of notifications) {
             if(notification.type !== "mention") {
                 continue
             }
@@ -130,15 +126,14 @@ async function replyToUsers() {
                 console.log("Query:", plainTextContent)
                 const id = notification.status.id
                 const message = await getReply(userName, plainTextContent)
-                await toot(mastodon, message, id)
+                await toot(message, id)
                 console.log("Response:", message)
             } catch (error) {
                 console.error("Failed reply:", userName, error)
             }
-            
         }
         if(notifications.length !== 0) {
-            await dismissAllNotifications(mastodon)
+            await dismissAllNotifications()
         }
     }
     catch (error) {
@@ -148,5 +143,7 @@ async function replyToUsers() {
 
 export const handler = async (event, context, callback) => {
     await replyToUsers();
-    callback(null, 'Finished')
+    callback(null, 'Finished') 
 };
+
+replyToUsers()

@@ -15,7 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "html-to-text": "^9.0.5",
-    "openai": "^4.24.1",
-    "tsl-mastodon-api": "^0.4.1"
+    "masto": "^6.5.2",
+    "openai": "^4.24.1"
   }
 }
