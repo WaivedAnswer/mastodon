@@ -104,11 +104,7 @@ async function dismissAllNotifications() {
     if(isReadonly()) {
         return
     }
-    const dismissResult = await masto.v1.notifications.clear()
-    if(dismissResult.failed) {
-        console.error("Failed to dismiss:", dismissResult)
-        throw new Error("Failed to dismiss")
-    }
+    await masto.v1.notifications.clear()
 }
 
 async function replyToUsers() {
@@ -145,5 +141,3 @@ export const handler = async (event, context, callback) => {
     await replyToUsers();
     callback(null, 'Finished') 
 };
-
-replyToUsers()
