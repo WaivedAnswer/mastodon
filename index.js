@@ -37,32 +37,36 @@ async function getReply(userName, lookingFor) {
     const functionName = "display_book_recommendation";
     const STRING_TYPE = "string";
     const OBJECT_TYPE = "object"
+    const ARRAY_TYPE = "array"
     const functions = [ {
         name: functionName,
         description: "Displays book recommendation",
         parameters: {
             type: OBJECT_TYPE,
             properties: {
-                result: {
-                    type: OBJECT_TYPE,
-                    properties: {
-                        title: {
-                            type: STRING_TYPE,
-                            description: "Book Title"
+                results: {
+                    type: ARRAY_TYPE,
+                    items: {
+                        type: OBJECT_TYPE,
+                        properties: {
+                            title: {
+                                type: STRING_TYPE,
+                                description: "Book Title"
+                            },
+                            author: {
+                                type: STRING_TYPE,
+                                description: "Book Author"
+                            },
+                            reason: {
+                                type: STRING_TYPE,
+                                description: "Sales pitch to the user on why they will love the book. Limit to 20 words"
+                            } 
                         },
-                        author: {
-                            type: STRING_TYPE,
-                            description: "Book Author"
-                        },
-                        reason: {
-                            type: STRING_TYPE,
-                            description: "Sales pitch to the user on why they will love the book. Limit to 60 words"
-                        } 
+                        required: ["title", 
+                            "author", 
+                            "reason"
+                            ]
                     },
-                    required: ["title", 
-                        "author", 
-                        "reason"
-                        ]
                 }
             }
         }
@@ -71,7 +75,7 @@ async function getReply(userName, lookingFor) {
     const chatResponse = await openai.chat.completions.create({
         model: "gpt-4-1106-preview",
         messages: [
-            {role: "system", "content": "Act as an expert librarian, tailoring book recommendations to user preferences without spoilers. Focus on understanding and matching the user's reading tastes, and ensure suggestions are personalized and engaging. Limit to single top response."},
+            {role: "system", "content": "Act as an expert librarian, tailoring book recommendations to user preferences without spoilers. Really focus on understanding and matching the user's reading tastes, and ensure suggestions are personalized and engaging. Limit to top two responses, or less if there aren't good enough options."},
             {role: "user", "content": "The user's search was: " + lookingFor},
         ],
         functions: functions,
@@ -84,9 +88,16 @@ async function getReply(userName, lookingFor) {
     }
 
     const recommendation = JSON.parse(bookRecommendationCall.arguments)
-    const result = recommendation.result
-
-    return `@${userName} Check Out "${result.title}" by ${result.author}\n\n${result.reason}\nFind more #books @ https://findmyread.com`
+    const results = recommendation.results
+    let recommendationString = ""
+    for(const result of results) {
+        recommendationString += `\n${result.title}\n${result.author}\n${result.reason}\n`
+    }
+    if(recommendationString === "") {
+        return `@${userName} Sorry I can't find any books for that search, you can still find more #books @ https://findmyread.com `
+    }
+    
+    return `@${userName} ${recommendationString}\nFind more #books @ https://findmyread.com`
 }
 
 async function toot(message, originStatusId) {
